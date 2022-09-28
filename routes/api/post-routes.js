@@ -1,12 +1,18 @@
 const router = require('express').Router();
-const {Post, User} = require('../../models');
+const {Post, User, Vote} = require('../../models');
+const sequelize = require('../../config/connection');
 
 router.get('/', async(req,res) => {
-    console.log('======================');
     try{
         const posts = await Post.findAll({
             // Query configuration
-            attributes : ['id', 'post_url', 'title', 'created_at'],
+            attributes: [
+              'id',
+              'post_url',
+              'title',
+              'created_at',
+              [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+            ],
             order: [['created_at', 'DESC']],
             include: [
               {
@@ -36,7 +42,13 @@ router.get('/:id', async(req,res) => {
         where: {
           id : req.params.id
         },
-        attributes : ['id', 'post_url', 'title', 'created_at']
+        attributes: [
+          'id',
+          'post_url',
+          'title',
+          'created_at',
+          [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+        ]
         ,
         include : {
           model : User,
@@ -68,6 +80,16 @@ router.post('/', async(req,res)=> {
     res.status(500).json({message: "Something went wrong", err})
    }
 })
+
+router.put('/upvote', (req, res) => {
+  Post.upvote(req.body, { Vote })
+    .then(updatedPostData => res.json(updatedPostData))
+    .catch(err => {
+      console.log(err);
+      res.status(400).json(err);
+    });
+ });
+
 
 router.put('/:id', async(req,res) => {
    try{
