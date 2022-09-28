@@ -8,10 +8,9 @@ router.get('/', (req, res) => {
     // attributes: { exclude: ['password'] }
   })
   .then(dbUserData => res.json(dbUserData))
-  .catch(err => {
-    console.log(err);
-    res.status(500).json(err);
-  });
+  // .catch(err => {
+  //   res.status(500).json({message: err});
+  // });
 });
 
 // GET /api/users/1
