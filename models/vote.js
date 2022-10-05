@@ -35,6 +35,5 @@ Vote.init(
         modelName: 'vote'
       }
 )
-red =  ''
 
 module.exports = Vote
