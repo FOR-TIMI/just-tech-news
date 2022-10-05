@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User, Vote, Post } = require('../../models');
+const { User, Vote, Post, Comment } = require('../../models');
 
 // GET /api/users
 router.get('/', (req, res) => {
@@ -17,7 +17,15 @@ include: [
       attributes: ['title'],
       through: Vote,
       as: 'voted_posts'
-    }
+    },
+    {
+      model: Comment,
+      attributes: ['id', 'comment_text', 'created_at'],
+      include: {
+        model: Post,
+        attributes: ['title']
+      }
+  }
 ]
   })
   .then(dbUserData => res.json(dbUserData))
@@ -33,18 +41,28 @@ router.get('/:id', (req, res) => {
         where: {
             id: req.params.id
         },
+       
         include: [
-            {
+          {
+            model: Post,
+            attributes: ['id', 'title', 'post_url', 'created_at']
+          },
+          {
+            model: Post,
+            attributes: ['title'],
+            through: Vote,
+            as: 'voted_posts'
+          },
+          {
+            model: Comment,
+            attributes: ['id', 'comment_text', 'created_at'],
+            include: {
               model: Post,
-              attributes: ['id', 'title', 'post_url', 'created_at']
-            },
-            {
-              model: Post,
-              attributes: ['title'],
-              through: Vote,
-              as: 'voted_posts'
+              attributes: ['title']
             }
-        ]
+        }
+      ]
+        
     })
     .then(dbUserData => {
         if(!dbUserData) {

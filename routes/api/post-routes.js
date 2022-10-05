@@ -1,26 +1,34 @@
 const router = require('express').Router();
-const {Post, User, Vote} = require('../../models');
+const {Post, User, Vote, Comment} = require('../../models');
 const sequelize = require('../../config/connection');
 
 router.get('/', async(req,res) => {
     try{
         const posts = await Post.findAll({
-            // Query configuration
-            attributes: [
-              'id',
-              'post_url',
-              'title',
-              'created_at',
-              [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
-            ],
-            order: [['created_at', 'DESC']],
-            include: [
-              {
-                  model: User,
-                  attributes: ['username']
+          order: [['created_at', 'DESC']],
+          attributes: [
+            'id',
+            'post_url',
+            'title',
+            'created_at',
+            [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+          ],
+          include: [
+            // include the Comment model here:
+            {
+              model: Comment,
+              attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+              include: {
+                model: User,
+                attributes: ['username']
               }
+            },
+            {
+              model: User,
+              attributes: ['username']
+            }
           ]
-          })
+         })
 
           if(!posts.length){
             res.status(404).json({message: "There are no posts yet"});
@@ -50,10 +58,20 @@ router.get('/:id', async(req,res) => {
           [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
         ]
         ,
-        include : {
-          model : User,
-          attributes: ['username']
+        include: [
+          {
+              model: User,
+              attributes: ['username']
+          },
+          {
+            model: Comment,
+            attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+            include: {
+              model: User,
+              attributes: ['username']
+            }
         }
+       ]
            
       })
     
